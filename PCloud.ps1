@@ -3,7 +3,7 @@
         $PCloud_auth = $(Get-Content .\PCloud.tocken)
         return $PCloud_auth
     }
-    return "No tocken"
+    return $nill
 }
 
 function New-PCloudTocken {
@@ -26,7 +26,6 @@ function Get-PCloudFiles {
     [CmdletBinding()]
     Param(
         [string]$Path = "/",
-        [Switch]$Recursive,
         [switch]$NoFiles
     )
     $tocken = Get-PCloudTocken
@@ -35,6 +34,32 @@ function Get-PCloudFiles {
     if ($Recursive -eq $true) { $url = $url + "&recursive=1" }
     if ($NoFiles -eq $true) { $url = $url + "&nofiles=1" }
     $unswer = Invoke-WebRequest -Uri $url | ConvertFrom-Json
-    if ($unswer.result -eq 0) { return $unswer.metadata.contents }
+    if ($unswer.result -eq 0) {
+        for ($i = 0; $i -lt $unswer.metadata.contents.Length; $i = $i + 1) { $unswer.metadata.contents[$i].PSObject.Properties.Remove('contents') } 
+        return $unswer.metadata.contents }
     return $unswer.error
 }
+
+function Upload-PCloudFile {
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$true)]
+        [string]$Path,
+        [Parameter(Mandatory=$true)]
+        [string]$File,
+        [string]$FileName = "",
+        [switch]$RenameIfExists
+    )
+    $tocken = Get-PCloudTocken
+    if ($tocken -eq $null) { return "error!" }
+    $uri = "https://api.pcloud.com/uploadfile?auth=$tocken&path=$Path&filename=$FileName"
+    if ($RenameIfExists -eq $true) { $uri = $uri + "&renameifexists=1" }
+
+
+    #Upload File
+    $wc = New-Object System.Net.WebClient
+    [byte[]]$result = $wc.UploadFile($uri, $File)
+    return [System.Text.Encoding]::ASCII.GetString($result)
+}
+
+Get-PCloudFiles
