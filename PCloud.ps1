@@ -123,18 +123,49 @@ function Copy-PCloudFile {
     Write-Warning "Work in progress"
 }
 
-function Set-PCloudFileProperty {
+function Set-PCloudFileName {
     [CmdletBinding()]
     Param (
-    [string]$Name
+    [string]$NewName
     )
     Write-Warning "Work in progress"
 }
 
 function LogOut-PCloud {
+    [CmdletBinding()]
+    Param (
+        [string]$Tocken = ""
+    )
 
+    if ($Tocken -eq "") { $Tocken = Get-PCloudTocken }
+    if ($Tocken -eq $null) { return $null }
+
+    return Invoke-WebRequest -Uri "https://api.pcloud.com/logout?auth=$Tocken" | ConvertFrom-Json
 }
 
 function Get-PCloudTockens {
-
+    [CmdletBinding()]
+    Param (
+        [string]$Tocken = ""
+    )
+    if ($Tocken -eq "") { $Tocken = Get-PCloudTocken }
+    if ($Tocken -eq $null) { return "Error" }
+    $result = Invoke-WebRequest -Uri "https://api.pcloud.com/listtokens?auth=$Tocken" | ConvertFrom-Json
+    if ($result.result -eq 0) { return $result.tokens }
+    return $result.error
 }
+
+function Remove-PCloudTocken {
+    [CmdletBinding()]
+    Param (
+        [string]$Tocken = "",
+        [Parameter(Mandatory=$true)]
+        [string]$TockenId = ""
+    )
+    if ($Tocken -eq "") { $Tocken = Get-PCloudTocken }
+    if ($Tocken -eq $null) { return "Error" }
+    return Invoke-WebRequest -Uri "https://api.pcloud.com/deletetoken?tokenid=$TockenId&auth=$Tocken" | ConvertFrom-Json
+}
+
+cd C:\Users\user\Documents\PowerShell\PCloud
+Get-PCloudTockens
