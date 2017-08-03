@@ -3,6 +3,7 @@
         $PCloud_auth = $(Get-Content .\PCloud.tocken)
         return $PCloud_auth
     }
+    Write-Warning "There is no tocken!"
     return $nill
 }
 
@@ -26,12 +27,15 @@ function Get-PCloudFiles {
     [CmdletBinding()]
     Param(
         [string]$Path = "/",
+        [int]$FolderId = -1,
         [switch]$NoFiles
     )
     $tocken = Get-PCloudTocken
     if ($tocken -eq $null) { return $null }
-    $url = "https://api.pcloud.com/listfolder?recursive=1&path=$Path&auth=$tocken"
-    if ($Recursive -eq $true) { $url = $url + "&recursive=1" }
+    $url = "https://api.pcloud.com/listfolder?auth=$tocken"
+    # Select if we will use path or FolderId
+    if ($FolderId -eq -1) { $url = $url + "&path=$Path" } else { $url = $url + "&folderid=$FolderId" }
+    # Remove files, just folders, just hardcore!
     if ($NoFiles -eq $true) { $url = $url + "&nofiles=1" }
     $unswer = Invoke-WebRequest -Uri $url | ConvertFrom-Json
     if ($unswer.result -eq 0) {
@@ -43,8 +47,8 @@ function Get-PCloudFiles {
 function Upload-PCloudFile {
     [CmdletBinding()]
     Param (
-        [Parameter(Mandatory=$true)]
-        [string]$Path,
+        [string]$Path = "/",
+        [int]$FolderId = -1,
         [Parameter(Mandatory=$true)]
         [string]$File,
         [string]$FileName = "",
@@ -52,9 +56,11 @@ function Upload-PCloudFile {
     )
     $tocken = Get-PCloudTocken
     if ($tocken -eq $null) { return "error!" }
-    $uri = "https://api.pcloud.com/uploadfile?auth=$tocken&path=$Path&filename=$FileName"
+    $uri = "https://api.pcloud.com/uploadfile?auth=$tocken&filename=$FileName"
+    # Select if we will use path or FolderId
+    if ($FolderId -eq -1) { $uri += "&path=$Path" } else { $uri += "&folderid=$FolderId" }
+    # If file exists, then rename it
     if ($RenameIfExists -eq $true) { $uri = $uri + "&renameifexists=1" }
-
 
     #Upload File
     $wc = New-Object System.Net.WebClient
@@ -62,4 +68,46 @@ function Upload-PCloudFile {
     return [System.Text.Encoding]::ASCII.GetString($result)
 }
 
-Get-PCloudFiles
+function Download-PCloudFile {
+    Write-Warning "Work in progress"
+}
+
+function New-PCloudFolder {
+    Write-Warning "Work in progress"
+}
+
+function Set-PCloudFolderName {
+    Write-Warning "Work in progress"
+}
+
+function Remove-PCloudFolder {
+    Write-Warning "Work in progress"
+}
+
+function Get-PCloudFileCheckSum {
+    Write-Warning "Work in progress"
+}
+
+function Remove-PCloudFile {
+    Write-Warning "Work in progress"
+}
+
+function Copy-PCloudFile {
+    Write-Warning "Work in progress"
+}
+
+function Set-PCloudFileProperty {
+    [CmdletBinding()]
+    Param (
+    [string]$Name
+    )
+    Write-Warning "Work in progress"
+}
+
+function LogOut-PCloud {
+
+}
+
+function Get-PCloudTockens {
+
+}
